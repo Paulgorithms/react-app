@@ -1,9 +1,8 @@
-function Message() {
-  const name = 'Paulgorithms'
+let count = 0;
 
-  if (name)
-    return <h1>Hello {name}</h1>;
-  return <h1>Hello World</h1>;
-}
+const Message = () => {
+  count++;
+  return <div>Message {count}</div>;
+};
 
 export default Message;
