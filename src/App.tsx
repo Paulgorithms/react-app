@@ -6,7 +6,7 @@ interface User {
   name: string;
 }
 
-function App() {
+const App = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [error, setError] = useState("");
   const [isLoading, setLoading] = useState(false);
@@ -39,10 +39,35 @@ function App() {
     setUsers(users.filter((u) => u.id !== user.id));
 
     axios
-      .delete(`https://jsonplaceholder.typicode.com/usersx/${user.id}`)
+      .delete(`https://jsonplaceholder.typicode.com/users/${user.id}`)
       .catch((err) => {
         setError(err.message);
         setUsers(originalUsers);
+      });
+  };
+
+  useEffect(() => {
+    console.log("Updated Users:", users);
+  }, [users]);
+
+  const addUser = () => {
+    const originalUsers = [...users];
+
+    // Create a temporary user
+    const newUser = { id: 0, name: "Paul" };
+    setUsers((prevUsers) => [newUser, ...prevUsers]);
+
+    axios
+      .post(`https://jsonplaceholder.typicode.com/users`, newUser)
+      .then(({ data: savedUser }) => {
+        // Replace temporary user with the real one from the server
+        setUsers((prevUsers) =>
+          prevUsers.map((user) => (user.id === 0 ? savedUser : user))
+        );
+      })
+      .catch((err) => {
+        setError(err.message);
+        setUsers(originalUsers); // Revert to original state on error
       });
   };
 
@@ -50,6 +75,10 @@ function App() {
     <>
       {error && <p className="text-danger">{error}</p>}
       {isLoading && <div className="spinner-border"></div>}
+      <button className="btn btn-primary mb" onClick={addUser}>
+        Add
+      </button>
+
       <ul className="list-group">
         {users.map((user) => {
           return (
@@ -70,6 +99,6 @@ function App() {
       </ul>
     </>
   );
-}
+};
 
 export default App;
