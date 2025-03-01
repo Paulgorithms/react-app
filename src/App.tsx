@@ -42,7 +42,7 @@ const App = () => {
 
     axios
       .patch(
-        `https://jsonplaceholder.typicode.com/xusers/${user.id}`,
+        `https://jsonplaceholder.typicode.com/users/${user.id}`,
         updatedUser
       )
       .catch((err) => {
