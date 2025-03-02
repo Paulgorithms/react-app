@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
-import apiClient, { CanceledError } from "./services/api-client";
-
-interface User {
-  id: number;
-  name: string;
-}
+import { CanceledError } from "./services/api-client";
+import userService, { User } from "./services/user-service";
 
 const App = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -16,10 +12,8 @@ const App = () => {
 
     setLoading(true);
 
-    apiClient
-      .get<User[]>("/users", {
-        signal: controller.signal,
-      })
+    const { request, cancel } = userService.getAllUsers();
+    request
       .then((res) => {
         setUsers(res.data);
         setLoading(false);
@@ -29,8 +23,7 @@ const App = () => {
         setError(err.message);
         setLoading(false);
       });
-
-    return () => controller.abort();
+    return () => cancel();
   }, []);
 
   const updateUser = (user: User) => {
@@ -40,7 +33,7 @@ const App = () => {
 
     setUsers(users.map((u) => (u.id === user.id ? updatedUser : u)));
 
-    apiClient.patch(`/users/${user.id}`, updatedUser).catch((err) => {
+    userService.updateUser(updatedUser).catch((err) => {
       setError(err.message);
       setUsers(originalUsers);
     });
@@ -51,7 +44,7 @@ const App = () => {
 
     setUsers(users.filter((u) => u.id !== user.id));
 
-    apiClient.delete(`/users/${user.id}`).catch((err) => {
+    userService.deleteUser(user.id).catch((err) => {
       setError(err.message);
       setUsers(originalUsers);
     });
@@ -63,22 +56,20 @@ const App = () => {
 
   const addUser = () => {
     const originalUsers = [...users];
-
-    // Create a temporary user
     const newUser = { id: 0, name: "Paul" };
+
     setUsers((prevUsers) => [newUser, ...prevUsers]);
 
-    apiClient
-      .post(`/users`, newUser)
+    userService
+      .createUser(newUser)
       .then(({ data: savedUser }) => {
-        // Replace temporary user with the real one from the server
         setUsers((prevUsers) =>
           prevUsers.map((user) => (user.id === 0 ? savedUser : user))
         );
       })
       .catch((err) => {
         setError(err.message);
-        setUsers(originalUsers); // Revert to original state on error
+        setUsers(originalUsers);
       });
   };
 
